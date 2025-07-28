@@ -2,6 +2,7 @@
 # It's configured to use the existing solution file for the analysis.
 # This ensures all projects referenced in the solution are correctly analyzed.
 
+
 name: SonarQube
 on:
   push:
