@@ -1,3 +1,7 @@
+# This workflow builds and analyzes a .NET project with SonarQube.
+# It's configured to use the existing solution file for the analysis.
+# This ensures all projects referenced in the solution are correctly analyzed.
+
 name: SonarQube
 on:
   push:
@@ -15,7 +19,8 @@ jobs:
         with:
           java-version: 17
           distribution: 'zulu' # Alternative distribution options are available.
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Cache SonarQube Cloud packages
@@ -37,19 +42,20 @@ jobs:
         run: |
           New-Item -Path .\.sonar\scanner -ItemType Directory
           dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
-      - name: Build and analyze with Bash
-        shell: bash
+      - name: Build and analyze solution
+        env:
+          # The SONAR_TOKEN secret is stored in your repository's settings.
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        shell: powershell
         run: |
-          # Enable globstar for recursive file matching
-          shopt -s globstar
-
-          # Begin SonarScanner with corrected arguments: /key: and /organization:
-          ./.sonar/scanner/dotnet-sonarscanner begin /key:"TesisEnel_SwiftPay-Aaron-Ap1" /organization:"tesisenel" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          # Begin the SonarQube analysis, pointing directly to your solution file.
+          # The sonar.cs.solution property tells the scanner which solution to analyze.
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"TesisEnel_SwiftPay-Aaron-Ap1" /o:"tesisenel" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.solution="SwiftPay/SwiftPay.sln"
           
-          # Build all csproj files found in the repository
-          dotnet build **/*.csproj
+          # Build your specific solution. The SonarScanner will wrap this build process,
+          # analyzing all the projects that are compiled.
+          dotnet build "SwiftPay/SwiftPay.sln"
           
-          # End SonarScanner analysis
-          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
-
-
+          # End the SonarQube analysis and upload the results.
+          .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+          
