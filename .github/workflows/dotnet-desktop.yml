@@ -38,7 +38,7 @@
               New-Item -Path .\.sonar\scanner -ItemType Directory
               dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
           - name: Build and analyze with Bash
-          - shell: bash
+            shell: bash
             run: |
               shopt -s globstar
               ./.sonar/scanner/dotnet-sonarscanner begin /k:"TesisEnel_SwiftPay-Aaron-Ap1" /o:"tesisenel" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
